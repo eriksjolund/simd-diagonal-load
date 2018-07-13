@@ -19,7 +19,7 @@
 #include "use_blend_masks.h"
 #include "check_template_parameters.h"
 
-template <unsigned simd_num_bits_per_element,
+template <typename integerT,
           unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions,
@@ -47,14 +47,14 @@ constexpr inline __attribute__((always_inline)) unsigned calculate_factor() {
 }
 
 template <unsigned iteration,
-          unsigned simd_num_bits_per_element,
+          typename integerT,
           unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions,
           unsigned num_vertical_mixing,
           unsigned current_masklength>
 class UnrollBlending {
-  using lookup = TypeLookup<simd_num_bits_per_element,
+  using lookup = TypeLookup<integerT,
                             simd_vector_length,
                             num_loads,
                             num_vertical_subdivisions>;
@@ -73,10 +73,11 @@ class UnrollBlending {
           (iteration + (((current_masklength) / 2) - 1)) % blenders_size;
 
       constexpr const unsigned factor1 =
-          calculate_factor<simd_num_bits_per_element, simd_vector_length,
-                           num_loads, num_vertical_subdivisions,
-                           num_vertical_mixing, current_masklength>();
+          calculate_factor<integerT, simd_vector_length, num_loads,
+                           num_vertical_subdivisions, num_vertical_mixing,
+                           current_masklength>();
 
+      constexpr const unsigned simd_num_bits_per_element = 8 * sizeof(integerT);
       constexpr const unsigned simd_num_bits_per_element_in_mask =
           simd_num_bits_per_element * factor1;
       constexpr const unsigned simd_vector_length_in_mask =
@@ -91,15 +92,15 @@ class UnrollBlending {
           EveryOther<simd_num_bits_per_element_in_mask,
                      simd_vector_length_in_mask>::every_other_mask());
 
-      UnrollBlending<iteration, simd_num_bits_per_element, simd_vector_length,
-                     num_loads, num_vertical_subdivisions, num_vertical_mixing,
+      UnrollBlending<iteration, integerT, simd_vector_length, num_loads,
+                     num_vertical_subdivisions, num_vertical_mixing,
                      current_masklength / 2>::
           blending(std::forward<typename lookup::blenders_t>(blenders));
     }
   }
 };
 
-template <unsigned simd_num_bits_per_element,
+template <typename integerT,
           unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions,
@@ -107,7 +108,7 @@ template <unsigned simd_num_bits_per_element,
           unsigned matrix_width>
 
 class SimdDiagonalSlider {
-  typedef TypeLookup<simd_num_bits_per_element,
+  typedef TypeLookup<integerT,
                      simd_vector_length,
                      num_loads,
                      num_vertical_subdivisions>
@@ -117,7 +118,7 @@ class SimdDiagonalSlider {
 
  public:
   constexpr SimdDiagonalSlider() : blenders_{} {
-    check_template_parameters<simd_num_bits_per_element, simd_vector_length,
+    check_template_parameters<integerT, simd_vector_length,
                               num_vertical_subdivisions, num_vertical_mixing,
                               num_loads>();
   }
@@ -200,20 +201,22 @@ class SimdDiagonalSlider {
         constexpr const auto initial_masklength =
             simd_vector_length / (num_loads * num_vertical_subdivisions);
 
-        UnrollBlending<iteration % blenders_size, simd_num_bits_per_element,
-                       simd_vector_length, num_loads, num_vertical_subdivisions,
+        UnrollBlending<iteration % blenders_size, integerT, simd_vector_length,
+                       num_loads, num_vertical_subdivisions,
                        num_vertical_mixing, initial_masklength>::
             blending(
                 std::forward<typename lookup::blenders_t>(this->blenders_));
       } else {
+        constexpr const unsigned simd_num_bits_per_element =
+            8 * sizeof(integerT);
         const auto mask_tuple =
             create_mask_tuple<simd_num_bits_per_element, simd_vector_length,
                               num_loads, num_vertical_subdivisions,
                               num_vertical_mixing>();
 
-        use_blend_masks<iteration % blenders_size, simd_num_bits_per_element,
-                        simd_vector_length, num_loads,
-                        num_vertical_subdivisions, num_vertical_mixing>(
+        use_blend_masks<iteration % blenders_size, integerT, simd_vector_length,
+                        num_loads, num_vertical_subdivisions,
+                        num_vertical_mixing>(
 
             std::forward<typename lookup::blenders_t>(this->blenders_),
             std::forward<decltype(mask_tuple)>(mask_tuple));
@@ -246,17 +249,17 @@ class SimdDiagonalSlider {
 
 template <
     unsigned iteration,
-    unsigned simd_num_bits_per_element,
+    typename integerT,
     unsigned simd_vector_length,
     unsigned num_loads,
     unsigned num_vertical_subdivisions,
     unsigned num_vertical_mixing,
     unsigned matrix_width,
-    template <unsigned, unsigned, unsigned, unsigned, unsigned, std::size_t>
+    template <typename, unsigned, unsigned, unsigned, unsigned, std::size_t>
 
     typename MATRIX>
 class UnrollInnerLoop {
-  typedef TypeLookup<simd_num_bits_per_element,
+  typedef TypeLookup<integerT,
                      simd_vector_length,
                      num_loads,
                      num_vertical_subdivisions>
@@ -264,13 +267,13 @@ class UnrollInnerLoop {
 
  public:
   static inline __attribute__((always_inline)) void inner_loop2(
-      SimdDiagonalSlider<simd_num_bits_per_element,
+      SimdDiagonalSlider<integerT,
                          simd_vector_length,
                          num_loads,
                          num_vertical_subdivisions,
                          num_vertical_mixing,
                          matrix_width>&& simd_diagonal_slider,
-      MATRIX<simd_num_bits_per_element,
+      MATRIX<integerT,
              simd_vector_length,
              num_loads,
              num_vertical_subdivisions,
@@ -310,32 +313,33 @@ class UnrollInnerLoop {
 
       );
 
-      UnrollInnerLoop<iteration + 1, simd_num_bits_per_element,
-                      simd_vector_length, num_loads, num_vertical_subdivisions,
-                      num_vertical_mixing, matrix_width, MATRIX>::
+      UnrollInnerLoop<iteration + 1, integerT, simd_vector_length, num_loads,
+                      num_vertical_subdivisions, num_vertical_mixing,
+                      matrix_width, MATRIX>::
           inner_loop2(
-              std::forward<SimdDiagonalSlider<
-                  simd_num_bits_per_element, simd_vector_length, num_loads,
-                  num_vertical_subdivisions, num_vertical_mixing,
-                  matrix_width> >(simd_diagonal_slider),
-              std::forward<MATRIX<simd_num_bits_per_element, simd_vector_length,
-                                  num_loads, num_vertical_subdivisions,
+              std::forward<
+                  SimdDiagonalSlider<integerT, simd_vector_length, num_loads,
+                                     num_vertical_subdivisions,
+                                     num_vertical_mixing, matrix_width> >(
+                  simd_diagonal_slider),
+              std::forward<MATRIX<integerT, simd_vector_length, num_loads,
+                                  num_vertical_subdivisions,
                                   num_vertical_mixing, matrix_width> >(matrix));
     }
   }
 };
 
 template <
-    unsigned simd_num_bits_per_element,
+    typename integerT,
     unsigned simd_vector_length,
     unsigned num_loads,
     unsigned num_vertical_subdivisions,
     unsigned num_vertical_mixing,
     unsigned matrix_width,
-    template <unsigned, unsigned, unsigned, unsigned, unsigned, std::size_t>
+    template <typename, unsigned, unsigned, unsigned, unsigned, std::size_t>
     typename MATRIX>
 class IterateDiagonalsTemplate {
-  typedef TypeLookup<simd_num_bits_per_element,
+  typedef TypeLookup<integerT,
                      simd_vector_length,
                      num_loads,
                      num_vertical_subdivisions>
@@ -343,13 +347,13 @@ class IterateDiagonalsTemplate {
 
  public:
   constexpr IterateDiagonalsTemplate() : simd_diagonal_slider_{} {}
-  void iterate_diagonals(MATRIX<simd_num_bits_per_element,
+  void iterate_diagonals(MATRIX<integerT,
                                 simd_vector_length,
                                 num_loads,
                                 num_vertical_subdivisions,
                                 num_vertical_mixing,
                                 matrix_width>& matrix) {
-    check_template_parameters<simd_num_bits_per_element, simd_vector_length,
+    check_template_parameters<integerT, simd_vector_length,
                               num_vertical_subdivisions, num_vertical_mixing,
                               num_loads>();
 
@@ -360,21 +364,20 @@ class IterateDiagonalsTemplate {
 
     constexpr const unsigned iteration = 0;
 
-    UnrollInnerLoop<iteration, simd_num_bits_per_element, simd_vector_length,
-                    num_loads, num_vertical_subdivisions, num_vertical_mixing,
+    UnrollInnerLoop<iteration, integerT, simd_vector_length, num_loads,
+                    num_vertical_subdivisions, num_vertical_mixing,
                     matrix_width, MATRIX>::
         inner_loop2(
 
             std::forward<
 
-                SimdDiagonalSlider<simd_num_bits_per_element,
-                                   simd_vector_length, num_loads,
+                SimdDiagonalSlider<integerT, simd_vector_length, num_loads,
                                    num_vertical_subdivisions,
                                    num_vertical_mixing, matrix_width> >(
                 simd_diagonal_slider_),
             std::forward<
 
-                MATRIX<simd_num_bits_per_element, simd_vector_length, num_loads,
+                MATRIX<integerT, simd_vector_length, num_loads,
                        num_vertical_subdivisions, num_vertical_mixing,
                        matrix_width> >(matrix)
 
@@ -384,7 +387,7 @@ class IterateDiagonalsTemplate {
   }
 
  private:
-  SimdDiagonalSlider<simd_num_bits_per_element,
+  SimdDiagonalSlider<integerT,
                      simd_vector_length,
                      num_loads,
                      num_vertical_subdivisions,

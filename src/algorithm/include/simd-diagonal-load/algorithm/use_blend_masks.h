@@ -15,7 +15,7 @@
 #include "power_of_two.h"
 
 template <unsigned iteration,
-          unsigned simd_num_bits_per_element,
+          typename integerT,
           unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions,
@@ -23,16 +23,16 @@ template <unsigned iteration,
           typename Tuple,
           std::size_t Index>
 constexpr inline __attribute__((always_inline)) void use_blend_masks_impl(
-    typename TypeLookup<simd_num_bits_per_element,
+    typename TypeLookup<integerT,
                         simd_vector_length,
                         num_loads,
                         num_vertical_subdivisions>::blenders_t& blenders,
     const Tuple& mask_tuple) {
-  constexpr const auto blenders_size = std::tuple_size<
-      typename
+  constexpr const auto blenders_size =
+      std::tuple_size<typename
 
-      TypeLookup<simd_num_bits_per_element, simd_vector_length, num_loads,
-                 num_vertical_subdivisions>::blenders_t>::value;
+                      TypeLookup<integerT, simd_vector_length, num_loads,
+                                 num_vertical_subdivisions>::blenders_t>::value;
 
   constexpr const unsigned current_masklength =
       two_to_the_power_of<Index + 1>();
@@ -49,9 +49,9 @@ constexpr inline __attribute__((always_inline)) void use_blend_masks_impl(
                                      std::get<Index>(mask_tuple));
 
   if constexpr (Index > 0) {
-    return use_blend_masks_impl<
-        iteration, simd_num_bits_per_element, simd_vector_length, num_loads,
-        num_vertical_subdivisions, num_vertical_mixing, Tuple, Index - 1>(
+    return use_blend_masks_impl<iteration, integerT, simd_vector_length,
+                                num_loads, num_vertical_subdivisions,
+                                num_vertical_mixing, Tuple, Index - 1>(
         blenders, mask_tuple);
   } else {
     return;
@@ -59,7 +59,7 @@ constexpr inline __attribute__((always_inline)) void use_blend_masks_impl(
 }
 
 template <unsigned iteration,
-          unsigned simd_num_bits_per_element,
+          typename integerT,
           unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions,
@@ -67,15 +67,15 @@ template <unsigned iteration,
           typename Tuple>
 
 constexpr inline __attribute__((always_inline)) void use_blend_masks(
-    typename TypeLookup<simd_num_bits_per_element,
+    typename TypeLookup<integerT,
                         simd_vector_length,
                         num_loads,
                         num_vertical_subdivisions>::blenders_t& blenders,
     const Tuple& mask_tuple) {
-  return use_blend_masks_impl<iteration, simd_num_bits_per_element,
-                              simd_vector_length, num_loads,
-                              num_vertical_subdivisions, num_vertical_mixing,
-                              Tuple, std::tuple_size<Tuple>::value - 1>(
+  return use_blend_masks_impl<iteration, integerT, simd_vector_length,
+                              num_loads, num_vertical_subdivisions,
+                              num_vertical_mixing, Tuple,
+                              std::tuple_size<Tuple>::value - 1>(
 
       blenders, mask_tuple);
 }

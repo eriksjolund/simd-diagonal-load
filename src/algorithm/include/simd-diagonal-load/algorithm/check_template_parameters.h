@@ -1,9 +1,10 @@
 #ifndef CHECK_TEMPLATE_PARAMETERS_H
 #define CHECK_TEMPLATE_PARAMETERS_H
 
+#include <type_traits>
 #include "power_of_two.h"
 
-template <unsigned simd_num_bits_per_element,
+template <typename T,
           unsigned simd_vector_length,
           unsigned num_vertical_subdivisions,
           unsigned num_vertical_mixing,
@@ -18,10 +19,14 @@ constexpr void check_template_parameters() {
                 (simd_vector_length / num_vertical_subdivisions));
 
   static_assert(simd_vector_length >= (num_loads * num_vertical_subdivisions));
-  static_assert(
-      simd_num_bits_per_element == 8 || simd_num_bits_per_element == 16 ||
-          simd_num_bits_per_element == 32 || simd_num_bits_per_element == 64,
-      "simd_num_bits_per_element should 8, 16, 32 or 64");
+  static_assert(std::is_same<T, std::uint8_t>::value ||
+                std::is_same<T, std::uint16_t>::value ||
+                std::is_same<T, std::uint32_t>::value ||
+                std::is_same<T, std::uint64_t>::value ||
+                std::is_same<T, std::int8_t>::value ||
+                std::is_same<T, std::int16_t>::value ||
+                std::is_same<T, std::int32_t>::value ||
+                std::is_same<T, std::int64_t>::value);
 }
 
 #endif  // CHECK_TEMPLATE_PARAMETERS_H

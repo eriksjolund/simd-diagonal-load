@@ -13,14 +13,14 @@ constexpr unsigned num_blenders() {
   return simd_vector_length / (num_loads * num_vertical_subdivisions);
 }
 
-template <unsigned simd_num_bits_per_element,
+template <typename integerT,
           unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions>
 class TypeLookup {
  public:
   typedef
-      typename lookup_vec<simd_num_bits_per_element, simd_vector_length>::type
+      typename lookup_vec_from_integertype<integerT, simd_vector_length>::type
           vectype;
 
   typedef std::array<
@@ -29,8 +29,6 @@ class TypeLookup {
       blenders_t;
   typedef typename std::function<vectype()> get_next_column_func_type;
   typedef typename std::function<void(vectype)> use_diagonal_func_type;
-  typedef typename lookup_unsigned<simd_num_bits_per_element>::type
-      simd_element_type;
 };
 
 #endif  // TYPELOOKUP_H

@@ -1,6 +1,6 @@
 #ifndef LOOKUP_TEMPLATES_H
 #define LOOKUP_TEMPLATES_H
-
+#include <cstdint>
 #include <simdpp/simd.h>
 template <unsigned num_bits>
 struct lookup_unsigned {};
@@ -41,6 +41,42 @@ struct lookup_vec<32, N> {
 template <unsigned N>
 struct lookup_vec<64, N> {
   typedef simdpp::uint64<N> type;
+};
+
+template <typename integerT, unsigned N>
+struct lookup_vec_from_integertype {};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::uint8_t, N> {
+  typedef simdpp::uint8<N> type;
+};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::uint16_t, N> {
+  typedef simdpp::uint16<N> type;
+};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::uint32_t, N> {
+  typedef simdpp::uint32<N> type;
+};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::uint64_t, N> {
+  typedef simdpp::uint64<N> type;
+};
+
+template <unsigned N>
+struct lookup_vec_from_integertype<std::int8_t, N> {
+  typedef simdpp::int8<N> type;
+};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::int16_t, N> {
+  typedef simdpp::int16<N> type;
+};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::int32_t, N> {
+  typedef simdpp::int32<N> type;
+};
+template <unsigned N>
+struct lookup_vec_from_integertype<std::int64_t, N> {
+  typedef simdpp::int64<N> type;
 };
 
 template <unsigned num_bits, unsigned N>
