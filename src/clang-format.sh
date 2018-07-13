@@ -13,10 +13,6 @@ files="./algorithm/include/simd-diagonal-load/algorithm/check_template_parameter
 ./algorithm/include/simd-diagonal-load/algorithm/use_blend_masks.h
 ./array-helper/include/simd-diagonal-load/array-helper/array_helper.h
 ./array-helper/include/simd-diagonal-load/array-helper/extract_helper.h
-./benchmark/benchmark.cc
-./benchmark/benchmark_matrix.h
-./verify-algorithm/test_matrix.h
-./verify-algorithm/verify-algorithm.cc
 "
 
 for i in $files; do 
