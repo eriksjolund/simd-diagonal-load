@@ -22,3 +22,7 @@ for (int i=0; i < width - 16; ++i) {
   do_something(&diagonal_vector);
 }
 ```
+
+This library is demnostrated in the 
+
+https://github.com/eriksjolund/simd-diagonal-load-json-demo#quick-demonstration
