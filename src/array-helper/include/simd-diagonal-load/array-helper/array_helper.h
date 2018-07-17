@@ -5,12 +5,23 @@
 
 #include <simd-diagonal-load/algorithm/lookup_templates.h>
 #include <simd-diagonal-load/algorithm/power_of_two.h>
+#include <simd-diagonal-load/array-helper/array_helper.h>
 #include "extract_helper.h"
 
 #include <set>
 #include <cassert>
 #include <iostream>
+#include <cassert>
+
+namespace {
+constexpr unsigned two_to_the_power_of_impl(unsigned num) {
+    if (num == 0) { return 1u; }
+        return 2u * two_to_the_power_of_impl(num - 1u);
+}
+}
+
 namespace detail {
+
 template <std::size_t N_inner,
           std::size_t N_outer,
           typename Elem,
@@ -44,11 +55,11 @@ constexpr unsigned get_index(unsigned i,
                              unsigned num_vertical_mixing) {
   assert(is_power_of_two(N_inner));
   assert(is_power_of_two(N_outer));
-  assert(is_power_of_two(num_vertical_mixing));
 
-  const auto tmp = N_inner / num_vertical_mixing;
+
+  const auto tmp = N_inner / two_to_the_power_of_impl(num_vertical_mixing);
   const auto vector_length = N_inner * N_outer;
-  return (j / tmp) * (vector_length / num_vertical_mixing) + (j % tmp) +
+  return (j / tmp) * (vector_length / two_to_the_power_of_impl(num_vertical_mixing)) + (j % tmp) +
          (i * tmp);
 }
 
@@ -122,10 +133,10 @@ constexpr std::array<Elem, N_inner * N_outer> concat_arrays_impl(
     std::array<std::array<Elem, N_inner>, N_outer>&& array,
     std::index_sequence<InnerArrayIndices...>) {
   return std::experimental::fundamentals_v2::make_array(
-      std::get<(InnerArrayIndices / num_vertical_mixing) +
-               (InnerArrayIndices % (N_inner / num_vertical_mixing))>(
-          std::get<(InnerArrayIndices % num_vertical_mixing) +
-                   (InnerArrayIndices / (N_inner * num_vertical_mixing))>(
+      std::get<(InnerArrayIndices / two_to_the_power_of<num_vertical_mixing>()) +
+               (InnerArrayIndices % (N_inner / two_to_the_power_of<num_vertical_mixing>()))>(
+          std::get<(InnerArrayIndices % two_to_the_power_of<num_vertical_mixing>()) +
+                   (InnerArrayIndices / (N_inner * two_to_the_power_of<num_vertical_mixing>()))>(
               array))...);
 }
 }  // namespace detail

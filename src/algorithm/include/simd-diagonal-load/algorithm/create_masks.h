@@ -26,10 +26,10 @@ inline __attribute__((always_inline)) decltype(auto) create_mask_tuple_impl(
 
   return std::make_tuple(
       EveryOther<simd_num_bits_per_element * two_to_the_power_of<1 + Is>() *
-                     num_vertical_mixing / 2,
+                     two_to_the_power_of<num_vertical_mixing>() / 2,
                  2 * simd_vector_length /
                      (two_to_the_power_of<1 + Is>() *
-                      num_vertical_mixing)>::every_other_mask()...);
+                      two_to_the_power_of<num_vertical_mixing>())>::every_other_mask()...);
 }
 
 template <unsigned simd_num_bits_per_element,

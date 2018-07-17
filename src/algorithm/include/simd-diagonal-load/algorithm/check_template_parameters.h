@@ -10,15 +10,13 @@ template <typename T,
           unsigned num_vertical_mixing,
           unsigned num_loads>
 constexpr void check_template_parameters() {
-  static_assert(is_power_of_two(num_vertical_subdivisions));
-  static_assert(is_power_of_two(num_vertical_mixing));
   static_assert(is_power_of_two(simd_vector_length));
   static_assert(is_power_of_two(num_loads));
 
-  static_assert(num_vertical_mixing <=
-                (simd_vector_length / num_vertical_subdivisions));
+  static_assert(two_to_the_power_of<num_vertical_mixing>() <=
+                (simd_vector_length / two_to_the_power_of<num_vertical_subdivisions>()));
 
-  static_assert(simd_vector_length >= (num_loads * num_vertical_subdivisions));
+  static_assert(simd_vector_length >= (num_loads * two_to_the_power_of<num_vertical_subdivisions>()));
   static_assert(std::is_same<T, std::uint8_t>::value ||
                 std::is_same<T, std::uint16_t>::value ||
                 std::is_same<T, std::uint32_t>::value ||

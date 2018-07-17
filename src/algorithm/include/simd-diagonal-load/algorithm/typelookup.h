@@ -9,8 +9,8 @@ template <unsigned simd_vector_length,
           unsigned num_loads,
           unsigned num_vertical_subdivisions>
 constexpr unsigned num_blenders() {
-  static_assert(simd_vector_length >= (num_loads * num_vertical_subdivisions));
-  return simd_vector_length / (num_loads * num_vertical_subdivisions);
+  static_assert(simd_vector_length >= (num_loads * two_to_the_power_of<num_vertical_subdivisions>()));
+  return simd_vector_length / (num_loads * two_to_the_power_of<num_vertical_subdivisions>());
 }
 
 template <typename integerT,
