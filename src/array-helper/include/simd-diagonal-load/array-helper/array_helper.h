@@ -6,6 +6,7 @@
 #include <simd-diagonal-load/algorithm/lookup_templates.h>
 #include <simd-diagonal-load/algorithm/power_of_two.h>
 #include <simd-diagonal-load/array-helper/array_helper.h>
+#include <simd-diagonal-load/array-helper/two_to_the_power_of.h>
 #include "extract_helper.h"
 
 #include <set>
@@ -52,7 +53,7 @@ constexpr unsigned get_index(unsigned i,
                              unsigned j,
                              unsigned N_inner,
                              unsigned N_outer,
-                             unsigned num_vertical_mixing) {
+                             num_vertical_mixing_t num_vertical_mixing) {
   assert(is_power_of_two(N_inner));
   assert(is_power_of_two(N_outer));
 
@@ -72,7 +73,7 @@ constexpr std::array<std::array<Elem, N_inner>, N_outer> split_array(
       std::make_index_sequence<N_outer>{});
 }
 
-template <unsigned num_vertical_mixing,
+template <num_vertical_mixing_t num_vertical_mixing,
           std::size_t N_inner,
           std::size_t N_outer,
           typename Elem>
@@ -99,7 +100,7 @@ std::array<std::array<Elem, N_inner>, N_outer> split_array2(
 
 template <std::size_t N_inner,
           std::size_t N_outer,
-          unsigned num_vertical_mixing,
+          num_vertical_mixing_t num_vertical_mixing,
           typename Elem>
 std::array<Elem, N_inner * N_outer> concat_arrays11(
     std::array<std::array<Elem, N_inner>, N_outer>&& array) {
@@ -126,7 +127,7 @@ namespace detail {
 
 template <std::size_t N_inner,
           std::size_t N_outer,
-          unsigned num_vertical_mixing,
+          num_vertical_mixing_t num_vertical_mixing,
           typename Elem,
           std::size_t... InnerArrayIndices>
 constexpr std::array<Elem, N_inner * N_outer> concat_arrays_impl(
@@ -143,7 +144,7 @@ constexpr std::array<Elem, N_inner * N_outer> concat_arrays_impl(
 
 template <std::size_t N_inner,
           std::size_t N_outer,
-          unsigned num_vertical_mixing,
+          num_vertical_mixing_t num_vertical_mixing,
           typename Elem>
 constexpr std::array<Elem, N_inner * N_outer> concat_arrays(
     std::array<std::array<Elem, N_inner>, N_outer>&& array) {

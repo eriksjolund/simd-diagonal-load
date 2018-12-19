@@ -6,7 +6,7 @@
 #include <string>
 #include <iostream>
 #include <simdpp/simd.h>
-
+#include "algorithm_types.h"
 #include "lookup_templates.h"
 
 #include "typelookup.h"
@@ -19,28 +19,29 @@
 #include "use_blend_masks.h"
 #include "check_template_parameters.h"
 
+
 template <typename integerT,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing,
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing,
           unsigned current_masklength>
 constexpr inline __attribute__((always_inline)) unsigned calculate_factor() {
 
 
   constexpr const unsigned initial_masklength =
-      simd_vector_length / (num_loads * two_to_the_power_of<num_vertical_subdivisions>());
+      simd_vector_length / (num_loads * two_to_the_power_of<unsigned, num_vertical_subdivisions>());
   constexpr const unsigned current_segment_length =
-      (simd_vector_length / (two_to_the_power_of<num_vertical_subdivisions>() * num_loads * 2)) /
+      (simd_vector_length / (two_to_the_power_of<unsigned, num_vertical_subdivisions>() * num_loads * 2)) /
       (initial_masklength / current_masklength);
   static_assert(current_segment_length != 0);
 
   constexpr const unsigned extract_segment_length =
-      (simd_vector_length / two_to_the_power_of<num_vertical_subdivisions>()) / two_to_the_power_of<num_vertical_mixing>();
+      (simd_vector_length / two_to_the_power_of<unsigned, num_vertical_subdivisions>()) / two_to_the_power_of<unsigned, num_vertical_mixing>();
   static_assert(extract_segment_length != 0);
   if constexpr (current_segment_length >= extract_segment_length) {
     constexpr const unsigned factor =
-        current_segment_length * two_to_the_power_of<num_vertical_subdivisions>();
+        current_segment_length * two_to_the_power_of<unsigned, num_vertical_subdivisions>();
     static_assert(factor <= simd_vector_length / 2);
     return factor;
   } else {
@@ -51,9 +52,9 @@ constexpr inline __attribute__((always_inline)) unsigned calculate_factor() {
 template <unsigned iteration,
           typename integerT,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing,
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing,
           unsigned current_masklength>
 class UnrollBlending {
   using lookup = TypeLookup<integerT,
@@ -104,9 +105,9 @@ class UnrollBlending {
 
 template <typename integerT,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing,
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing,
           unsigned matrix_width>
 
 class SimdDiagonalSlider {
@@ -134,7 +135,7 @@ class SimdDiagonalSlider {
 
   constexpr static unsigned extra_save_columns_to_num_load_bigger_than_one() {
     return (num_loads - 1) *
-           (simd_vector_length / (two_to_the_power_of<num_vertical_subdivisions>() * num_loads));
+           (simd_vector_length / (two_to_the_power_of<unsigned, num_vertical_subdivisions>() * num_loads));
   }
 
   constexpr static unsigned number_save_columns_needed() {
@@ -143,7 +144,7 @@ class SimdDiagonalSlider {
 
   constexpr static unsigned max_pos() {
     constexpr const auto max_pos =
-        (simd_vector_length / two_to_the_power_of<num_vertical_subdivisions>()) - 1;
+        (simd_vector_length / two_to_the_power_of<unsigned, num_vertical_subdivisions>()) - 1;
     static_assert(max_pos >= 0);
     return max_pos;
   }
@@ -201,7 +202,7 @@ class SimdDiagonalSlider {
     if constexpr (blenders_size > 1) {
       if constexpr (true) {
         constexpr const auto initial_masklength =
-            simd_vector_length / (num_loads * two_to_the_power_of<num_vertical_subdivisions>());
+            simd_vector_length / (num_loads * two_to_the_power_of<unsigned, num_vertical_subdivisions>());
 
         UnrollBlending<iteration % blenders_size, integerT, simd_vector_length,
                        num_loads, num_vertical_subdivisions,
@@ -253,9 +254,9 @@ template <
     unsigned iteration,
     typename integerT,
     unsigned simd_vector_length,
-    unsigned num_loads,
-    unsigned num_vertical_subdivisions,
-    unsigned num_vertical_mixing,
+    num_loads_t num_loads,
+    num_vertical_subdivisions_t num_vertical_subdivisions,
+    num_vertical_mixing_t num_vertical_mixing,
     unsigned matrix_width,
     template <typename, unsigned, unsigned, unsigned, unsigned, std::size_t>
 
@@ -334,9 +335,9 @@ class UnrollInnerLoop {
 template <
     typename integerT,
     unsigned simd_vector_length,
-    unsigned num_loads,
-    unsigned num_vertical_subdivisions,
-    unsigned num_vertical_mixing,
+    num_loads_t num_loads,
+    num_vertical_subdivisions_t num_vertical_subdivisions,
+    num_vertical_mixing_t num_vertical_mixing,
     unsigned matrix_width,
     template <typename, unsigned, unsigned, unsigned, unsigned, std::size_t>
     typename MATRIX>

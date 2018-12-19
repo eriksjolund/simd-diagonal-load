@@ -14,12 +14,15 @@
 
 #include "power_of_two.h"
 
+
+//template  <unsigned iteration, 
+
 template <unsigned iteration,
           typename integerT,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing,
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing,
           typename Tuple,
           std::size_t Index>
 constexpr inline __attribute__((always_inline)) void use_blend_masks_impl(
@@ -34,18 +37,20 @@ constexpr inline __attribute__((always_inline)) void use_blend_masks_impl(
                       TypeLookup<integerT, simd_vector_length, num_loads,
                                  num_vertical_subdivisions>::blenders_t>::value;
 
+// TODO, write constexpr template functions instead for current_masklength< std::size_t Index >()
   constexpr const unsigned current_masklength =
-      two_to_the_power_of<Index + 1>();
+      two_to_the_power_of<unsigned, Index + 1>();
   constexpr const int from_index =
       (iteration + ((current_masklength)-1)) % blenders_size;
 
   constexpr const int to_index =
       (iteration + (((current_masklength) / 2) - 1)) % blenders_size;
 
+// TODO, I guess here we should use std::get< to_index >(blenders) instead of blenders[to_index]
   constexpr const auto num_masks = logtwo(
       num_blenders<simd_vector_length, num_loads, num_vertical_subdivisions>());
 
-  blenders[to_index] = simdpp::blend(blenders[to_index], blenders[from_index],
+  blenders[to_index] = simdpp::blend(blenders[to_index], std::get<from_index> (blenders),
                                      std::get<Index>(mask_tuple));
 
   if constexpr (Index > 0) {
@@ -61,9 +66,9 @@ constexpr inline __attribute__((always_inline)) void use_blend_masks_impl(
 template <unsigned iteration,
           typename integerT,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing,
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing,
           typename Tuple>
 
 constexpr inline __attribute__((always_inline)) void use_blend_masks(

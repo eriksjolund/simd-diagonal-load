@@ -15,9 +15,9 @@
 
 template <unsigned simd_num_bits_per_element,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing,
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing,
           std::size_t... Is>
 inline __attribute__((always_inline)) decltype(auto) create_mask_tuple_impl(
     std::index_sequence<Is...>) {
@@ -34,9 +34,9 @@ inline __attribute__((always_inline)) decltype(auto) create_mask_tuple_impl(
 
 template <unsigned simd_num_bits_per_element,
           unsigned simd_vector_length,
-          unsigned num_loads,
-          unsigned num_vertical_subdivisions,
-          unsigned num_vertical_mixing>
+          num_loads_t num_loads,
+          num_vertical_subdivisions_t num_vertical_subdivisions,
+          num_vertical_mixing_t num_vertical_mixing>
 inline __attribute__((always_inline)) decltype(auto) create_mask_tuple() {
   constexpr const auto num_masks = logtwo(
       num_blenders<simd_vector_length, num_loads, num_vertical_subdivisions>());
